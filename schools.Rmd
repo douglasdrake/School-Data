@@ -1,0 +1,250 @@
+---
+title: "Schools Data"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+In this R notebook, we reproduce the results of our Homework 4 that was performed in Python with the `pandas` library.  We utilize the [tidyverse](https://www.tidyverse.org/) collection of R packages.
+```{r}
+# Load the required packages and set constants for loading data
+library(tidyverse)
+
+setwd("C:/Users/dadra/Desktop/RHomework4")
+
+projectHome <- file.path("C:/Users/dadra/Desktop/RHomework4/")
+dataHome <- file.path(projectHome, "School-Data", "Resources")
+studentsFile <- "students_complete.csv"
+schoolsFile <- "schools_complete.csv"
+```
+
+```{r}
+# Define a helper function for loading the data
+# If the files move, we just need to change the reference above
+readDataFile <- function(filename, pathname) {
+  read_csv(file.path(pathname, filename))
+}
+
+# Load the data files
+studentsData <- readDataFile(studentsFile, dataHome)
+schoolsData <- readDataFile(schoolsFile, dataHome)
+```
+
+```{r}
+# Merge the two tibbles on the key school_name
+fullData <- studentsData %>% inner_join(schoolsData, by="school_name")
+fullData
+```
+We check below that `Student ID` is in fact a unique key in this tibble; the number of unique ID's should match the number of rows in the tibble.
+```{r}
+fullData %>% summarize(
+  nStudents = n_distinct(`Student ID`)
+)
+```
+## District Summary
+
+We perform the district summaries first and then format the results.  This keeps the two tasks of summarization and formatting separate allowing us to be able to refer back to the original results of the summarization and to potentially adjust the formatting if needed.
+```{r}
+# A helper function for determining if a score is passing:
+isPassingScore <- function(score, cutoff=70) {
+  ifelse(score >= 70, TRUE, FALSE)
+}
+
+districtSummary <- fullData %>%
+  mutate(
+    passReading = isPassingScore(reading_score),
+    passMath    = isPassingScore(math_score)) %>% 
+  summarize(
+    totalSchools        = n_distinct(school_name),
+    totalStudents       = n_distinct(`Student ID`),
+    totalBudget         = sum(unique(budget)),
+    averageMathScore    = mean(math_score),
+    averageReadingScore = mean(reading_score),
+    passingMath         = mean(passMath),
+    passingReading      = mean(passReading),
+    overallPassing      = ((passingMath + passingReading)/ 2))
+
+districtSummary
+```
+We now look at one way to format the results using `dplyr` functions:
+```{r}
+# We define a three helper functions for formatting
+printComma <- function(x) {
+  format(x, big.mark = ",")
+}
+
+printDollars <- function(x) {
+  paste("$", format(x, big.mark = ","), sep="")
+}
+
+printPercent <- function(x) {
+  paste(x, "%", sep="")
+}
+
+districtSummary %>%
+  transmute(
+    `Total Schools`           = totalSchools,
+    `Total Students`          = printComma(totalStudents),
+    `Total Budget`            = printDollars(printComma(totalBudget)),
+    `Average Math Score`      = round(averageMathScore, 2),
+    `Average Reading Score`   = round(averageReadingScore, 2),
+    `Percent Passing Math`    = printPercent(round(100 * passingMath, 2)),
+    `Percent Passing Reading` = printPercent(round(100 * passingReading, 2)),
+    `Overall Passing Rate`    = printPercent(round(100 * overallPassing, 2)))
+```
+
+## School Summary
+We look at the various scores by school.  Note that we again separate the task of computing the summaries and formatting the output.
+```{r}
+schoolSummary <- fullData %>%
+  mutate(
+    passReading = isPassingScore(reading_score),
+    passMath    = isPassingScore(math_score)) %>% 
+  group_by(school_name) %>%
+  summarize(
+    type                = unique(type),
+    totalStudents       = n(),
+    totalBudget         = unique(budget),
+    perStudentBudget    = totalBudget/totalStudents,
+    averageMathScore    = mean(math_score),
+    averageReadingScore = mean(reading_score),
+    passingMath         = mean(passMath),
+    passingReading      = mean(passReading),
+    overallPassing      = (passingMath + passingReading)/ 2)
+
+schoolSummary %>%
+  transmute(
+    School                    = school_name,
+    Type                      = type,
+    `Total Students`          = printComma(totalStudents),
+    `Total Budget`            = printDollars(printComma(totalBudget)),
+    `Per Student Budget`      = printDollars(round(perStudentBudget, 2)),
+    `Average Math Score`      = round(averageMathScore, 2),
+    `Average Reading Score`   = round(averageReadingScore, 2),
+    `Percent Passing Math`    = printPercent(round(100 * passingMath, 2)),
+    `Percent Passing Reading` = printPercent(round(100 * passingReading, 2)),
+    `Overall Passing Rate`    = printPercent(round(100 * overallPassing, 2)))
+
+```
+
+## Top Five Performing Schools by Passing Rate
+```{r}
+schoolSummary %>% 
+  arrange(desc(overallPassing)) %>%
+  slice(1:5)
+```
+
+## Bottom Five Performing Schools By Passing Rate 
+```{r}
+schoolSummary %>% 
+  arrange(overallPassing) %>%
+  slice(1:5)
+```
+
+## Math Scores by Grade
+Note that tidy data would call for a tibble where each column was a variable and each row was an observation on the different variables as follows:
+```{r}
+fullData %>%
+  group_by(school_name, grade) %>%
+  summarize(averageMathScore = mean(math_score))
+```
+To reproduce the table we presented before, we need to work within the summarize function to produce a different table where the grade level is the different columns.  We again compute the summaries and then perform the formatting.
+```{r}
+fullData %>%
+  group_by(school_name) %>%
+  summarize(
+    ninthGrade = mean(math_score[grade == "9th"]),
+    tenthGrade = mean(math_score[grade == "10th"]),
+    eleventhGrade = mean(math_score[grade == "11th"]),
+    twelthGrade = mean(math_score[grade == "12th"])
+  ) %>% 
+  transmute(
+    School = school_name,
+    `9th grade`  = format(ninthGrade, digits=4),
+    `10th grade` = format(tenthGrade, digits=4),
+    `11th grade` = format(eleventhGrade, digits=4),
+    `12th grade` = format(twelthGrade, digits=4)
+  )
+```
+
+## Reading Scores by Grade
+```{r}
+fullData %>%
+  group_by(school_name) %>%
+  summarize(
+    ninthGrade = mean(reading_score[grade == "9th"]),
+    tenthGrade = mean(reading_score[grade == "10th"]),
+    eleventhGrade = mean(reading_score[grade == "11th"]),
+    twelthGrade = mean(reading_score[grade == "12th"])
+  ) %>% 
+  transmute(
+    School = school_name,
+    `9th grade`  = format(ninthGrade, digits=4),
+    `10th grade` = format(tenthGrade, digits=4),
+    `11th grade` = format(eleventhGrade, digits=4),
+    `12th grade` = format(twelthGrade, digits=4)
+  )
+```
+
+## Scores by School Spending
+Note:  We depart from the tables presented in the original solution and compute the summaries from the full data.  The results differ from the original report in that we are not giving averages of averages.  To reproduce the tables given in the original solution, we would work with the `schoolSummary` tibble instead of the `fullData` tibble.
+```{r}
+spendingBins <- c(0, 585, 615, 645, 675)
+spendingLabels <- c(" <$585", " $585-615", " $615-645", " $645-675")
+fullData %>% 
+  mutate(
+    passReading = isPassingScore(reading_score),
+    passMath    = isPassingScore(math_score),
+    perStudentBudget = budget/size,
+    spendingLevels = cut(perStudentBudget, 
+                         breaks = spendingBins, 
+                         lables = spendingLabels,
+                         right = FALSE)) %>%
+  group_by(spendingLevels) %>%
+  summarize(
+    averageMathScore    = mean(math_score),
+    averageReadingScore = mean(reading_score),
+    passingMath         = mean(passMath),
+    passingReading      = mean(passReading),
+    overallPassing      = (passingMath + passingReading)/ 2)
+```
+
+## Scores by School Size
+```{r}
+schoolSizes <- c(0, 1000, 2000, 5000)
+sizeLabels <- c("Small (<1000)", "Medium (1000-2000)", "Large (2000-5000)")
+
+fullData %>% 
+  mutate(
+    passReading = isPassingScore(reading_score),
+    passMath    = isPassingScore(math_score),
+    sizeLevels = cut(size, 
+                     breaks = schoolSizes,
+                     labels = sizeLabels,
+                     right  = FALSE)) %>%
+  group_by(sizeLevels) %>%
+  summarize(
+    averageMathScore    = mean(math_score),
+    averageReadingScore = mean(reading_score),
+    passingMath         = mean(passMath),
+    passingReading      = mean(passReading),
+    overallPassing      = (passingMath + passingReading)/ 2)
+
+```
+
+## Scores by School Type
+```{r}
+fullData %>%
+  mutate(
+    passReading = isPassingScore(reading_score),
+    passMath    = isPassingScore(math_score)) %>% 
+  group_by(type) %>%
+  summarize(
+    averageMathScore    = mean(math_score),
+    averageReadingScore = mean(reading_score),
+    passingMath         = mean(passMath),
+    passingReading      = mean(passReading),
+    overallPassing      = (passingMath + passingReading)/ 2)
+```
+
