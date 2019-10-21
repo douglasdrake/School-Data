@@ -7,6 +7,7 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 
@@ -1613,18 +1614,6 @@ summary {
 }
 </style>
 
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
-
 <!-- code folding -->
 
 
@@ -1649,20 +1638,20 @@ $(document).ready(function () {
 </div>
 
 
-<p>In this R notebook, we reproduce the results of our Homework 4 that was performed in Python with the <code>pandas</code> library. We utilize the <a href="https://www.tidyverse.org/">tidyverse</a> collection of R packages.</p>
+<p>In this R notebook, we reproduce the results that were performed in Python with the <code>pandas</code> library. We utilize the <a href="https://www.tidyverse.org/">tidyverse</a> collection of R packages.</p>
 <pre class="r"><code># Load the required packages and set constants for loading data
 library(tidyverse)</code></pre>
-<pre><code>## -- Attaching packages --------------------------------------------- tidyverse 1.2.1 --</code></pre>
+<pre><code>## -- Attaching packages ----------------------------------------------------------------------------- tidyverse 1.2.1 --</code></pre>
 <pre><code>## v ggplot2 3.2.0     v purrr   0.3.2
-## v tibble  2.1.3     v dplyr   0.8.1
+## v tibble  2.1.3     v dplyr   0.8.3
 ## v tidyr   0.8.3     v stringr 1.4.0
 ## v readr   1.3.1     v forcats 0.4.0</code></pre>
-<pre><code>## -- Conflicts ------------------------------------------------ tidyverse_conflicts() --
+<pre><code>## -- Conflicts -------------------------------------------------------------------------------- tidyverse_conflicts() --
 ## x dplyr::filter() masks stats::filter()
 ## x dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>setwd(&quot;C:/Users/dadra/Desktop/RHomework4&quot;)
+<pre class="r"><code>setwd(&quot;C:/Users/dadra/Desktop/R_school_data&quot;)
 
-projectHome &lt;- file.path(&quot;C:/Users/dadra/Desktop/RHomework4/&quot;)
+projectHome &lt;- file.path(&quot;C:/Users/dadra/Desktop/R_school_data/&quot;)
 dataHome &lt;- file.path(projectHome, &quot;School-Data&quot;, &quot;Resources&quot;)
 studentsFile &lt;- &quot;students_complete.csv&quot;
 schoolsFile &lt;- &quot;schools_complete.csv&quot;</code></pre>
@@ -1973,6 +1962,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

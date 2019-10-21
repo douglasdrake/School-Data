@@ -6,14 +6,14 @@ output:
   pdf_document: default
 ---
 
-In this R notebook, we reproduce the results of our Homework 4 that was performed in Python with the `pandas` library.  We utilize the [tidyverse](https://www.tidyverse.org/) collection of R packages.
+In this R notebook, we reproduce the results that were performed in Python with the `pandas` library.  We utilize the [tidyverse](https://www.tidyverse.org/) collection of R packages.
 ```{r}
 # Load the required packages and set constants for loading data
 library(tidyverse)
 
-setwd("C:/Users/dadra/Desktop/RHomework4")
+setwd("C:/Users/dadra/Desktop/R_school_data")
 
-projectHome <- file.path("C:/Users/dadra/Desktop/RHomework4/")
+projectHome <- file.path("C:/Users/dadra/Desktop/R_school_data/")
 dataHome <- file.path(projectHome, "School-Data", "Resources")
 studentsFile <- "students_complete.csv"
 schoolsFile <- "schools_complete.csv"
